@@ -1,0 +1,47 @@
+name: LLM evals
+
+# Manual on purpose: every run consumes Claude subscription usage (or API credits).
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Claude Code model alias (haiku, sonnet, opus)"
+        default: sonnet
+        required: true
+      split:
+        description: "Case split"
+        type: choice
+        options: [dev, heldout, all]
+        default: dev
+      repeat:
+        description: "Runs per case"
+        default: "1"
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - run: uv sync --locked
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Run evals
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          MODEL: ${{ inputs.model }}
+          SPLIT: ${{ inputs.split }}
+          REPEAT: ${{ inputs.repeat }}
+        run: uv run python -m evals run --driver claude_code --model "$MODEL" --split "$SPLIT" --repeat "$REPEAT"
+      - name: Job summary
+        if: always()
+        run: cat evals/results/*.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: eval-results
+          path: evals/results/

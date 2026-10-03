@@ -1,0 +1,25 @@
+name: The model used a tool badly
+description: A model called the wrong tool, passed wrong arguments or misunderstood a result
+labels: [llm-behavior]
+body:
+  - type: textarea
+    id: prompt
+    attributes:
+      label: What you asked
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What the model did (tool calls and arguments) and what you expected
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: MCP client and model
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: These reports become eval cases in evals/cases, so a reproducible prompt helps a lot.

@@ -1,0 +1,45 @@
+# Creating tasks from natural language. Priority: trivial 0.1, easy 1, medium 1.5, hard 2.
+
+- id: create-todo-dentist
+  category: create
+  lang: es
+  prompt: "Agrega un pendiente para llamar al dentista este viernes, dificultad difícil, con la etiqueta Salud."
+  seed:
+    tags: [Salud]
+  expect:
+    tasks:
+      - where: {type: todo, text_contains: dentista}
+        has: {priority: 2, due_date: "2026-09-18", tags: [Salud], completed: false}
+    tools: {required: [habitica_create_task], max_calls: 4}
+
+- id: create-daily-gym
+  category: create
+  lang: es
+  prompt: "Crea una diaria 'Ir al gimnasio' que se repita los lunes, miércoles y viernes."
+  expect:
+    tasks:
+      - where: {type: daily, text_contains: gimnasio}
+        has: {frequency: weekly, weekdays: [mon, wed, fri]}
+    tools: {required: [habitica_create_task], max_calls: 3}
+
+- id: create-todo-checklist-en
+  category: create
+  split: heldout
+  lang: en
+  prompt: "Add a to-do called 'Pack for the trip' with a checklist: passport, phone charger, sunscreen."
+  expect:
+    tasks:
+      - where: {type: todo, text_contains: pack}
+        has: {checklist_texts: [passport, phone charger, sunscreen]}
+    tools: {required: [habitica_create_task], max_calls: 3}
+
+- id: create-bad-habit
+  category: create
+  split: heldout
+  lang: es
+  prompt: "Quiero un hábito para dejar de fumar: cada vez que fume quiero registrarlo como algo negativo, nunca como positivo."
+  expect:
+    tasks:
+      - where: {type: habit, text_contains: fum}
+        has: {up: false, down: true}
+    tools: {required: [habitica_create_task], max_calls: 3}

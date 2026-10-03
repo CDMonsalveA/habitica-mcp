@@ -1,0 +1,59 @@
+# Recording progress: dailies, to-dos, habits and rewards.
+
+- id: score-daily-meditation
+  category: score
+  lang: es
+  prompt: "Ya medité hoy, márcalo en Habitica."
+  seed:
+    tasks:
+      - {type: daily, text: "Meditación de 10 minutos"}
+      - {type: daily, text: "Leer 20 páginas"}
+  expect:
+    tasks:
+      - where: {text_contains: meditacion}
+        has: {completed: true}
+      - where: {text_contains: leer}
+        has: {completed: false}
+    tools: {required: [habitica_score_task], max_calls: 3}
+
+- id: score-habit-water-en
+  category: score
+  lang: en
+  prompt: "I just drank a glass of water, log it on my Habitica habit."
+  seed:
+    tasks:
+      - {type: habit, text: "Drink water", up: true, down: false}
+      - {type: habit, text: "Eat junk food", up: false, down: true}
+  expect:
+    tasks:
+      - where: {text: "Drink water"}
+        has: {counterUp: 1, counterDown: 0}
+      - where: {text: "Eat junk food"}
+        has: {counterUp: 0, counterDown: 0}
+    tools: {required: [habitica_score_task], max_calls: 3}
+
+- id: score-undo-todo
+  category: score
+  split: heldout
+  lang: es
+  prompt: "Me equivoqué: 'Pagar la luz' todavía no está pagado. Desmárcalo en Habitica."
+  seed:
+    tasks:
+      - {type: todo, text: "Pagar la luz", completed: true, dateCompleted: "2026-09-16T13:00:00Z"}
+  expect:
+    tasks:
+      - where: {text: "Pagar la luz"}
+        has: {completed: false}
+    tools: {required: [habitica_score_task], max_calls: 4}
+
+- id: score-buy-reward-confirmed
+  category: score
+  lang: es
+  prompt: "Compra mi recompensa 'Ver una película' en Habitica. Sí, confirmo que quiero gastar el oro."
+  seed:
+    user: {stats: {gp: 40}}
+    tasks:
+      - {type: reward, text: "Ver una película", value: 20}
+  expect:
+    gold: 20
+    tools: {required: [habitica_score_task], max_calls: 4}

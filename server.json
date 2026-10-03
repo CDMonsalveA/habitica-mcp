@@ -1,0 +1,43 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.CDMonsalveA/habitica-mcp",
+  "title": "Habitica",
+  "description": "Read and manage Habitica habits, dailies, to-dos, rewards, checklists and tags, safely.",
+  "websiteUrl": "https://github.com/CDMonsalveA/habitica-mcp",
+  "repository": {
+    "url": "https://github.com/CDMonsalveA/habitica-mcp",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "habitica-mcp",
+      "version": "0.1.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "HABITICA_USER_ID",
+          "description": "Habitica User ID (Settings > Site Data)",
+          "isRequired": true,
+          "isSecret": false
+        },
+        {
+          "name": "HABITICA_API_TOKEN",
+          "description": "Habitica API Token (Settings > Site Data)",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "HABITICA_MCP_MODE",
+          "description": "standard or read-only",
+          "default": "standard"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+name: Tool or feature request
+description: Suggest a new capability (for example pets, quests or party)
+labels: [enhancement]
+body:
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What would you like to ask your assistant to do?
+      description: Describe the workflow in plain words, not the API endpoint.
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Does it spend gold or gems, delete data or affect other people (party, guilds)?

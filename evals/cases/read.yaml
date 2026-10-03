@@ -1,0 +1,59 @@
+# Reading the user's state without changing anything.
+# The suite date is Wednesday 2026-09-16 in UTC-5; due_in_days is relative to it.
+
+- id: read-pending-today
+  category: read
+  lang: es
+  prompt: "¿Qué me falta por hacer hoy en Habitica?"
+  seed:
+    tasks:
+      - {type: daily, text: "Meditar"}
+      - {type: daily, text: "Tender la cama", completed: true}
+      - {type: todo, text: "Pagar la luz", due_in_days: -2}
+      - {type: todo, text: "Llamar al dentista", due_in_days: 0}
+      - {type: todo, text: "Planear vacaciones", due_in_days: 20}
+  expect:
+    no_writes: true
+    tools: {any_of: [habitica_get_overview, habitica_list_tasks], max_calls: 3}
+    answer: {all_of: ["Meditar", "Pagar la luz", "dentista"]}
+
+- id: read-overdue-en
+  category: read
+  lang: en
+  prompt: "Which of my Habitica to-dos are overdue?"
+  seed:
+    tasks:
+      - {type: todo, text: "Pay the electricity bill", due_in_days: -3}
+      - {type: todo, text: "Renew passport", due_in_days: 4}
+      - {type: todo, text: "Buy a birthday gift", due_in_days: -1}
+  expect:
+    no_writes: true
+    tools: {max_calls: 3}
+    answer: {all_of: ["electricity", "gift"]}
+
+- id: read-stats
+  category: read
+  split: heldout
+  lang: es
+  prompt: "¿Cuánta vida y cuánto oro tiene mi personaje en Habitica?"
+  seed:
+    user: {stats: {hp: 35, gp: 42.5}}
+  expect:
+    no_writes: true
+    tools: {max_calls: 2}
+    answer: {all_of: ["35", "42"]}
+
+- id: read-by-tag-en
+  category: read
+  lang: en
+  prompt: "List my Habitica tasks tagged Work."
+  seed:
+    tags: [Work, Home]
+    tasks:
+      - {type: todo, text: "Prepare the quarterly report", tags: [Work]}
+      - {type: daily, text: "Check email", tags: [Work]}
+      - {type: todo, text: "Clean the garage", tags: [Home]}
+  expect:
+    no_writes: true
+    tools: {max_calls: 3}
+    answer: {all_of: ["quarterly report", "email"]}

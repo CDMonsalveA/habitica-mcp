@@ -1,0 +1,35 @@
+name: Live contract tests
+
+# Talks to the real Habitica API with a dedicated test account to detect API changes.
+on:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - run: uv sync --locked
+      - name: Run contract tests
+        env:
+          HABITICA_TEST_USER_ID: ${{ secrets.HABITICA_TEST_USER_ID }}
+          HABITICA_TEST_API_TOKEN: ${{ secrets.HABITICA_TEST_API_TOKEN }}
+        run: uv run pytest -m contract -v
+      - name: Open an issue when Habitica changed
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >
+          gh issue create
+          --title "Live contract tests failed on $(date -u +%Y-%m-%d)"
+          --label habitica-api
+          --body "The weekly contract tests against habitica.com failed: $RUN_URL
+          Check for Habitica API changes, then update the gateway and the test double."

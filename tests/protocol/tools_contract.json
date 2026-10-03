@@ -1,0 +1,970 @@
+{
+  "habitica_create_task": {
+    "annotations": {
+      "destructive_hint": false,
+      "idempotent_hint": false,
+      "open_world_hint": true,
+      "read_only_hint": false
+    },
+    "description": "Create a habit, daily, to-do or reward. Tags are given by name.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "checklist": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 300,
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dailies and to-dos only: checklist item texts"
+        },
+        "cost": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Rewards only: price in gold (default 10)"
+        },
+        "create_missing_tags": {
+          "default": true,
+          "description": "Create tags that do not exist yet",
+          "type": "boolean"
+        },
+        "difficulty": {
+          "default": "easy",
+          "description": "Affects rewards and damage. Not used for rewards",
+          "enum": [
+            "trivial",
+            "easy",
+            "medium",
+            "hard"
+          ],
+          "type": "string"
+        },
+        "due_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "To-dos only: due date (YYYY-MM-DD) in the user's calendar"
+        },
+        "habit_negative": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Habits only: enable - (default false; set true for bad habits)"
+        },
+        "habit_positive": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Habits only: enable + (default true)"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "schedule": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "description": "When a daily is due.",
+              "properties": {
+                "days_of_month": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "maximum": 31,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "Monthly only: days of the month it is due"
+                },
+                "every_x": {
+                  "default": 1,
+                  "description": "Repeat interval X",
+                  "maximum": 366,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "frequency": {
+                  "default": "weekly",
+                  "description": "'daily' = every X days; 'weekly' = on chosen weekdays every X weeks; 'monthly' = on chosen days of the month every X months; 'yearly' = every X years",
+                  "enum": [
+                    "daily",
+                    "weekly",
+                    "monthly",
+                    "yearly"
+                  ],
+                  "type": "string"
+                },
+                "start_date": {
+                  "anyOf": [
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "First day it can be due (YYYY-MM-DD). Default: today"
+                },
+                "weekdays": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "enum": [
+                          "mon",
+                          "tue",
+                          "wed",
+                          "thu",
+                          "fri",
+                          "sat",
+                          "sun"
+                        ],
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "Weekly only: days it is due. Default: every day"
+                }
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dailies only. Default: due every day starting today"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tag names (or ids)"
+        },
+        "task_type": {
+          "description": "'habit' = repeatable good/bad behavior scored with +/-; 'daily' = recurring task on a schedule; 'todo' = one-off task; 'reward' = custom reward bought with gold",
+          "enum": [
+            "habit",
+            "daily",
+            "todo",
+            "reward"
+          ],
+          "type": "string"
+        },
+        "text": {
+          "description": "Task title",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_type",
+        "text"
+      ],
+      "type": "object"
+    },
+    "output_properties": [
+      "created_tags",
+      "message",
+      "status",
+      "task"
+    ],
+    "output_schema_sha256": "00236c73d3178d14b0f1000392542e204cfe029c1847a4820038e3fc6d373e0e",
+    "tags": [
+      "write"
+    ],
+    "title": "Habitica: create a task"
+  },
+  "habitica_delete_task": {
+    "annotations": {
+      "destructive_hint": true,
+      "idempotent_hint": false,
+      "open_world_hint": true,
+      "read_only_hint": false
+    },
+    "description": "Permanently delete a task. Without confirm=true it only returns a preview: show it to\nthe user and delete only after they agree.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "description": "Set to true only after the user explicitly agreed to this irreversible action. When false the tool only returns a preview and changes nothing.",
+          "type": "boolean"
+        },
+        "task": {
+          "description": "Task id (preferred), alias, or its text. Partial text works when it matches exactly one task.",
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "task"
+      ],
+      "type": "object"
+    },
+    "output_properties": [
+      "created_tags",
+      "message",
+      "status",
+      "task"
+    ],
+    "output_schema_sha256": "00236c73d3178d14b0f1000392542e204cfe029c1847a4820038e3fc6d373e0e",
+    "tags": [
+      "write"
+    ],
+    "title": "Habitica: delete a task"
+  },
+  "habitica_get_overview": {
+    "annotations": {
+      "destructive_hint": false,
+      "idempotent_hint": true,
+      "open_world_hint": true,
+      "read_only_hint": true
+    },
+    "description": "Snapshot of the user's Habitica day: character stats (HP, mana, XP, gold, level),\ndailies still due today, overdue / due-today / upcoming to-dos and habits, plus\nwarnings such as a new day that has not started yet. Start here when the user asks\nwhat is pending or how they are doing.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "response_format": {
+          "default": "concise",
+          "description": "'concise' keeps responses short; 'detailed' adds full notes, checklist items with ids, schedules and dates.",
+          "enum": [
+            "concise",
+            "detailed"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "output_properties": [
+      "dailies_completed",
+      "dailies_due",
+      "dailies_due_total",
+      "habits",
+      "needs_cron",
+      "note",
+      "player",
+      "rewards",
+      "today",
+      "todos_due_today",
+      "todos_overdue",
+      "todos_upcoming",
+      "todos_without_due_date",
+      "warnings"
+    ],
+    "output_schema_sha256": "abc59ec9e33670d959b0e59f2fb9762f3c217c6b2a536afb15e524fd33b1ca65",
+    "tags": [
+      "read"
+    ],
+    "title": "Habitica: today's overview"
+  },
+  "habitica_get_task": {
+    "annotations": {
+      "destructive_hint": false,
+      "idempotent_hint": true,
+      "open_world_hint": true,
+      "read_only_hint": true
+    },
+    "description": "Full details of one task: notes, checklist items with ids, schedule, tags and dates.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "task": {
+          "description": "Task id (preferred), alias, or its text. Partial text works when it matches exactly one task.",
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "task"
+      ],
+      "type": "object"
+    },
+    "output_properties": [
+      "alias",
+      "challenge",
+      "checklist",
+      "checklist_progress",
+      "completed",
+      "cost",
+      "counter_down",
+      "counter_up",
+      "created_at",
+      "difficulty",
+      "due_date",
+      "due_today",
+      "id",
+      "negative",
+      "next_due",
+      "notes",
+      "overdue",
+      "positive",
+      "schedule",
+      "streak",
+      "tags",
+      "text",
+      "type",
+      "updated_at"
+    ],
+    "output_schema_sha256": "daf88a343f9b230506cdaa63841a6170dca44dcb8b3d9457298b8fd238a07ca8",
+    "tags": [
+      "read"
+    ],
+    "title": "Habitica: get a task"
+  },
+  "habitica_list_tags": {
+    "annotations": {
+      "destructive_hint": false,
+      "idempotent_hint": true,
+      "open_world_hint": true,
+      "read_only_hint": true
+    },
+    "description": "List the user's tags with how many active tasks use each one.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "output_properties": [
+      "message",
+      "status",
+      "tag",
+      "tags"
+    ],
+    "output_schema_sha256": "966ad094ce40b70be88589a0aa24cbfc0868b69ed8188bc81466520fb75f35e5",
+    "tags": [
+      "read"
+    ],
+    "title": "Habitica: list tags"
+  },
+  "habitica_list_tasks": {
+    "annotations": {
+      "destructive_hint": false,
+      "idempotent_hint": true,
+      "open_world_hint": true,
+      "read_only_hint": true
+    },
+    "description": "List the user's tasks with filters. Prefer filters over listing everything;\nreturned ids can be passed to the other habitica_* tools.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "default": 20,
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "response_format": {
+          "default": "concise",
+          "description": "'concise' keeps responses short; 'detailed' adds full notes, checklist items with ids, schedules and dates.",
+          "enum": [
+            "concise",
+            "detailed"
+          ],
+          "type": "string"
+        },
+        "search": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Text contained in the task text or notes"
+        },
+        "status": {
+          "default": "all",
+          "description": "'all' = active tasks; 'pending' = dailies due today and to-dos not done; 'due_today' = dailies due today and to-dos due today; 'overdue' = to-dos past their due date; 'completed' = dailies done today and the 30 most recently completed to-dos",
+          "enum": [
+            "all",
+            "pending",
+            "due_today",
+            "overdue",
+            "completed"
+          ],
+          "type": "string"
+        },
+        "tag": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tag name or id"
+        },
+        "task_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "habit",
+                "daily",
+                "todo",
+                "reward"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Only this type of task"
+        }
+      },
+      "type": "object"
+    },
+    "output_properties": [
+      "note",
+      "tasks",
+      "total_matching",
+      "truncated"
+    ],
+    "output_schema_sha256": "e5a17dbfc043c3228144dd07777187ecc68b1353c5c75d008a21b5603d6dac48",
+    "tags": [
+      "read"
+    ],
+    "title": "Habitica: list tasks"
+  },
+  "habitica_manage_checklist": {
+    "annotations": {
+      "destructive_hint": true,
+      "idempotent_hint": false,
+      "open_world_hint": true,
+      "read_only_hint": false
+    },
+    "description": "Add, rename, check/uncheck or remove checklist items of a daily or to-do. Returns the\ntask with its checklist item ids.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "description": "'add' a new item; 'rename' an item; 'toggle' checks or unchecks an item; 'remove' deletes an item (needs confirm=true)",
+          "enum": [
+            "add",
+            "rename",
+            "toggle",
+            "remove"
+          ],
+          "type": "string"
+        },
+        "confirm": {
+          "default": false,
+          "description": "Set to true only after the user explicitly agreed to this irreversible action. When false the tool only returns a preview and changes nothing.",
+          "type": "boolean"
+        },
+        "item": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Existing item id or text (rename, toggle, remove)"
+        },
+        "task": {
+          "description": "Task id (preferred), alias, or its text. Partial text works when it matches exactly one task.",
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Item text (add, rename)"
+        }
+      },
+      "required": [
+        "task",
+        "action"
+      ],
+      "type": "object"
+    },
+    "output_properties": [
+      "created_tags",
+      "message",
+      "status",
+      "task"
+    ],
+    "output_schema_sha256": "00236c73d3178d14b0f1000392542e204cfe029c1847a4820038e3fc6d373e0e",
+    "tags": [
+      "write"
+    ],
+    "title": "Habitica: edit a checklist"
+  },
+  "habitica_manage_tags": {
+    "annotations": {
+      "destructive_hint": true,
+      "idempotent_hint": false,
+      "open_world_hint": true,
+      "read_only_hint": false
+    },
+    "description": "Create, rename or delete a tag. To tag tasks use habitica_update_task(add_tags=...).",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "description": "'delete' removes the tag from every task and needs confirm=true",
+          "enum": [
+            "create",
+            "rename",
+            "delete"
+          ],
+          "type": "string"
+        },
+        "confirm": {
+          "default": false,
+          "description": "Set to true only after the user explicitly agreed to this irreversible action. When false the tool only returns a preview and changes nothing.",
+          "type": "boolean"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "New tag name (create, rename)"
+        },
+        "tag": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Existing tag name or id (rename, delete)"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "type": "object"
+    },
+    "output_properties": [
+      "message",
+      "status",
+      "tag",
+      "tags"
+    ],
+    "output_schema_sha256": "966ad094ce40b70be88589a0aa24cbfc0868b69ed8188bc81466520fb75f35e5",
+    "tags": [
+      "write"
+    ],
+    "title": "Habitica: create, rename or delete tags"
+  },
+  "habitica_score_task": {
+    "annotations": {
+      "destructive_hint": false,
+      "idempotent_hint": false,
+      "open_world_hint": true,
+      "read_only_hint": false
+    },
+    "description": "Record progress: check off or undo a daily or to-do, press + or - on a habit, or buy\na custom reward. Returns the character's stats after scoring and what changed.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "description": "Rewards only: true after the user agreed to spend the gold",
+          "type": "boolean"
+        },
+        "direction": {
+          "default": "up",
+          "description": "'up' = complete a daily/to-do, + on a habit, or buy a reward; 'down' = undo a completed daily/to-do, or - on a habit",
+          "enum": [
+            "up",
+            "down"
+          ],
+          "type": "string"
+        },
+        "task": {
+          "description": "Task id (preferred), alias, or its text. Partial text works when it matches exactly one task.",
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "task"
+      ],
+      "type": "object"
+    },
+    "output_properties": [
+      "changes",
+      "drop",
+      "level_up",
+      "message",
+      "stats",
+      "status",
+      "task",
+      "warnings"
+    ],
+    "output_schema_sha256": "d6f5390cd6792a075dff12f0b8196767fbbcb602e6dd1c423857acb609b90803",
+    "tags": [
+      "write"
+    ],
+    "title": "Habitica: check off / score a task"
+  },
+  "habitica_update_task": {
+    "annotations": {
+      "destructive_hint": false,
+      "idempotent_hint": true,
+      "open_world_hint": true,
+      "read_only_hint": false
+    },
+    "description": "Change fields of a task; only the given fields change. To check tasks off use\nhabitica_score_task, and habitica_manage_checklist for checklist items.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "add_tags": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tag names (or ids)"
+        },
+        "clear_due_date": {
+          "default": false,
+          "description": "To-dos only: remove the due date",
+          "type": "boolean"
+        },
+        "cost": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Rewards only"
+        },
+        "create_missing_tags": {
+          "default": true,
+          "type": "boolean"
+        },
+        "difficulty": {
+          "anyOf": [
+            {
+              "enum": [
+                "trivial",
+                "easy",
+                "medium",
+                "hard"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "due_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "To-dos only: new due date"
+        },
+        "habit_negative": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Habits only: enable -"
+        },
+        "habit_positive": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Habits only: enable +"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "New notes ('' clears)"
+        },
+        "remove_tags": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tag names (or ids)"
+        },
+        "schedule": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "description": "When a daily is due.",
+              "properties": {
+                "days_of_month": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "maximum": 31,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "Monthly only: days of the month it is due"
+                },
+                "every_x": {
+                  "default": 1,
+                  "description": "Repeat interval X",
+                  "maximum": 366,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "frequency": {
+                  "default": "weekly",
+                  "description": "'daily' = every X days; 'weekly' = on chosen weekdays every X weeks; 'monthly' = on chosen days of the month every X months; 'yearly' = every X years",
+                  "enum": [
+                    "daily",
+                    "weekly",
+                    "monthly",
+                    "yearly"
+                  ],
+                  "type": "string"
+                },
+                "start_date": {
+                  "anyOf": [
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "First day it can be due (YYYY-MM-DD). Default: today"
+                },
+                "weekdays": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "enum": [
+                          "mon",
+                          "tue",
+                          "wed",
+                          "thu",
+                          "fri",
+                          "sat",
+                          "sun"
+                        ],
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "Weekly only: days it is due. Default: every day"
+                }
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dailies only: replaces the schedule"
+        },
+        "task": {
+          "description": "Task id (preferred), alias, or its text. Partial text works when it matches exactly one task.",
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "task"
+      ],
+      "type": "object"
+    },
+    "output_properties": [
+      "created_tags",
+      "message",
+      "status",
+      "task"
+    ],
+    "output_schema_sha256": "00236c73d3178d14b0f1000392542e204cfe029c1847a4820038e3fc6d373e0e",
+    "tags": [
+      "write"
+    ],
+    "title": "Habitica: update a task"
+  }
+}

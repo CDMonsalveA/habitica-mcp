@@ -1,0 +1,108 @@
+[project]
+name = "habitica-mcp"
+version = "0.1.0"
+description = "MCP server that lets LLMs read and manage your Habitica tasks safely, within Habitica's API rules."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "CDMonsalveA", email = "122051013+CDMonsalveA@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+keywords = ["habitica", "mcp", "model-context-protocol", "llm", "productivity", "fastmcp", "claude"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business :: Scheduling",
+    "Typing :: Typed",
+]
+dependencies = [
+    "aiohttp>=3.9",
+    "fastmcp>=4.0.3,<5",
+    "habiticalib>=0.4.7,<0.5",
+    "pydantic>=2.12",
+    "pydantic-settings>=2.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/CDMonsalveA/habitica-mcp"
+Issues = "https://github.com/CDMonsalveA/habitica-mcp/issues"
+Changelog = "https://github.com/CDMonsalveA/habitica-mcp/blob/main/CHANGELOG.md"
+
+[project.scripts]
+habitica-mcp = "habitica_mcp.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "dirty-equals>=0.11",
+    "inline-snapshot>=0.35.4",
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.7",
+]
+evals = [
+    "pyyaml>=6.0",
+]
+
+[tool.uv]
+default-groups = ["dev", "evals"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "N", "UP", "B", "A", "C4", "DTZ", "SIM", "RUF",
+    "ASYNC", "S", "PT", "RET", "PIE", "PERF", "TRY", "LOG", "G",
+]
+ignore = [
+    "TRY003", # long messages in exceptions are the point: they are shown to the model
+    "PERF401", # explicit loops read better than extend() with long conditions
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "PLR2004", "DTZ001"]
+
+[tool.pyright]
+include = ["src", "tests", "evals"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+strict = ["src"]
+reportMissingTypeStubs = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-m 'not contract'"
+markers = [
+    "contract: talks to the real habitica.com API with a test account (needs HABITICA_TEST_* env vars)",
+]
+filterwarnings = ["error::pytest.PytestUnraisableExceptionWarning"]
+
+[tool.coverage.run]
+source = ["habitica_mcp"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 90
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+]

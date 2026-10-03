@@ -1,0 +1,45 @@
+# Contributing
+
+Thanks for helping! Issues and pull requests are welcome in English or Spanish.
+
+## Set up
+
+```bash
+uv sync
+uv run pytest
+uv run ruff format . && uv run ruff check . && uv run pyright
+```
+
+Tests never touch the real Habitica: they use the in-memory test double in `tests/fake_habitica`.
+
+## Ground rules
+
+- **Habitica's API guidelines are non-negotiable**: keep the `x-client` header, the rate limiter and
+  the "never run cron" rule. Tools that spend gold/gems or destroy data need `confirm=true`.
+- **Tools are an API for models.** Changing a tool name, parameter or description changes how models
+  behave. The contract test (`tests/protocol`) fails on any change; if the change is intended run
+  `UPDATE_CONTRACT=1 uv run pytest tests/protocol`, commit the updated `tools_contract.json` and
+  explain the change in `CHANGELOG.md`. Prefer adding over renaming; deprecate for at least one minor
+  version before removing.
+- **Measure tool changes.** For changes to tool descriptions or results, run the evals before and
+  after (see [docs/measurement.md](docs/measurement.md)) and paste the summary in the PR.
+- Keep responses small: every token returned to the model costs context.
+- Coverage must stay at or above 90 %.
+
+## Adding a tool
+
+1. Write the logic as a plain async function taking the gateway (see `src/habitica_mcp/tools`).
+2. Register it with a clear description, accurate annotations and the `read` or `write` tag.
+3. If Habitica needs a new endpoint, add it to `gateway.py` and to the test double, checking the
+   behavior in [HabitRPG/habitica](https://github.com/HabitRPG/habitica) (`website/server/controllers`).
+4. Add integration tests through the MCP client, update the contract snapshot and the README.
+5. Consider adding eval cases that exercise the new tool.
+
+## Commits and releases
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`...). Releases
+are cut from `main` by a maintainer following [docs/maintenance.md](docs/maintenance.md).
+
+## Code of conduct
+
+This project follows the [Code of Conduct](CODE_OF_CONDUCT.md).

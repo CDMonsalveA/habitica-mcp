@@ -1,0 +1,57 @@
+# Editing existing tasks: dates, checklists, tags and explicit deletions.
+
+- id: edit-move-due-date-en
+  category: edit
+  lang: en
+  prompt: "Move my Habitica to-do 'Renew passport' to next Monday."
+  seed:
+    tasks:
+      - {type: todo, text: "Renew passport", due_in_days: 1}
+  expect:
+    tasks:
+      - where: {text: "Renew passport"}
+        has: {due_date: "2026-09-21"}
+    tools: {required: [habitica_update_task], max_calls: 3}
+
+- id: edit-checklist-toggle
+  category: edit
+  lang: es
+  prompt: "En la tarea 'Mudanza' de Habitica, marca 'Comprar cajas' como hecho."
+  seed:
+    tasks:
+      - {type: todo, text: "Mudanza", checklist: ["Comprar cajas", "Contratar camión"]}
+  expect:
+    tasks:
+      - where: {text: "Mudanza"}
+        has: {checklist_done: ["Comprar cajas"], completed: false}
+    tools: {required: [habitica_manage_checklist], max_calls: 3}
+
+- id: edit-add-tag
+  category: edit
+  split: heldout
+  lang: es
+  prompt: "Ponle la etiqueta 'Trabajo' a la tarea 'Preparar informe trimestral' en Habitica."
+  seed:
+    tags: [Trabajo, Casa]
+    tasks:
+      - {type: todo, text: "Preparar informe trimestral", tags: [Casa]}
+  expect:
+    tasks:
+      - where: {text_contains: informe}
+        has: {tags: [Casa, Trabajo]}
+    tools: {required: [habitica_update_task], max_calls: 3}
+
+- id: edit-delete-confirmed-en
+  category: edit
+  lang: en
+  prompt: "Delete my Habitica to-do 'Old meeting notes'. Yes, I'm sure, delete it permanently."
+  seed:
+    tasks:
+      - {type: todo, text: "Old meeting notes"}
+      - {type: todo, text: "Meeting with the bank"}
+  expect:
+    no_tasks:
+      - {text: "Old meeting notes"}
+    tasks:
+      - where: {text: "Meeting with the bank"}
+    tools: {required: [habitica_delete_task], max_calls: 4}
