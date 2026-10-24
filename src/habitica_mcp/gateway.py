@@ -8,6 +8,7 @@ parsed with habiticalib's typed models.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from collections.abc import Awaitable, Callable, Mapping, Sequence
@@ -76,24 +77,28 @@ class HabiticaGateway:
         self._now = now
         self._timeout = aiohttp.ClientTimeout(total=timeout_seconds)
         self._max_wait = max_wait_seconds
+        self._inflight: dict[str, asyncio.Future[Any]] = {}
 
     # ------------------------------------------------------------------ reads
 
     async def get_user(self, fields: Sequence[str]) -> UserData:
         """Fetch only the listed user fields (``userFields`` projection)."""
         wanted = sorted(set(fields))
-        key = "user:" + ",".join(wanted)
-        if (cached := self._cache.get(key)) is not None:
-            record_cache_hit()
-            return cached  # type: ignore[no-any-return]
-        data = await self._request("GET", "/api/v3/user", params={"userFields": ",".join(wanted)})
-        user = _parse(UserData, data, "the user profile")
-        self._cache.set(key, user)
-        if all(field in wanted for field in CLOCK_FIELDS):
-            self._cache.set("prefs", _clock_prefs(user), ttl=PREFERENCES_TTL_SECONDS)
-        if "tags" in wanted:
-            self._cache.set("tags", list(user.tags))
-        return user
+
+        async def load() -> UserData:
+            params = {"userFields": ",".join(wanted)}
+            user = _parse(
+                UserData,
+                await self._request("GET", "/api/v3/user", params=params),
+                "the user profile",
+            )
+            if all(field in wanted for field in CLOCK_FIELDS):
+                self._cache.set("prefs", _clock_prefs(user), ttl=PREFERENCES_TTL_SECONDS)
+            if "tags" in wanted:
+                self._cache.set("tags", list(user.tags))
+            return user
+
+        return await self._cached("user:" + ",".join(wanted), load)
 
     async def get_full_user(self) -> UserData:
         """The whole user document (large). Only it carries ``needsCron`` and computed stats."""
@@ -208,10 +213,23 @@ class HabiticaGateway:
     # --------------------------------------------------------------- plumbing
 
     async def _cached[T](self, key: str, load: Callable[[], Awaitable[T]]) -> T:
+        """Serve from the cache, or share one in-flight request between concurrent calls.
+
+        Clients often run several tools in parallel; without this each would spend a request
+        of Habitica's per-minute budget on the same data.
+        """
         if (cached := self._cache.get(key)) is not None:
             record_cache_hit()
             return cached  # type: ignore[no-any-return]
-        value = await load()
+        if (pending := self._inflight.get(key)) is not None:
+            record_cache_hit()
+            return await asyncio.shield(pending)  # type: ignore[no-any-return]
+        task: asyncio.Future[T] = asyncio.ensure_future(load())
+        self._inflight[key] = task
+        try:
+            value = await asyncio.shield(task)
+        finally:
+            self._inflight.pop(key, None)
         self._cache.set(key, value)
         return value
 
@@ -307,7 +325,9 @@ def _parse[T](model: type[T], data: Any, what: str) -> T:
     try:
         return model.from_dict(data)  # type: ignore[attr-defined,no-any-return]
     except Exception as exc:  # mashumaro raises several unrelated types
-        logger.warning("Could not parse %s: %s", what, exc)
+        # The exception text can quote the offending value (task text...): log only metadata.
+        field = getattr(exc, "field_name", None)
+        logger.warning("Could not parse %s (%s, field %s)", what, type(exc).__name__, field)
         raise UnexpectedResponseError(what) from exc
 
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 from uuid import UUID
 
 from pydantic import Field, SecretStr, field_validator
@@ -20,6 +21,7 @@ from .errors import MissingCredentialsError
 
 Mode = Literal["standard", "read-only"]
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR"]
+_LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 
 
 class Settings(BaseSettings):
@@ -159,6 +161,14 @@ class Settings(BaseSettings):
     @property
     def read_only(self) -> bool:
         return self.mode == "read-only"
+
+    @property
+    def sends_credentials_in_clear(self) -> bool:
+        """True when the API token would cross the network unencrypted (http to a remote host)."""
+        url = urlsplit(self.base_url)
+        host = (url.hostname or "").lower()
+        local = host in _LOCAL_HOSTS or host.endswith(".localhost")
+        return url.scheme == "http" and not local
 
     def credentials(self) -> tuple[str, str]:
         """Return ``(user_id, api_token)`` or explain how to configure them."""

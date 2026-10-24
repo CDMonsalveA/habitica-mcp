@@ -69,6 +69,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
     if args.check:
+        # Profile names may contain emoji that a legacy Windows console cannot encode.
+        for stream in (sys.stdout, sys.stderr):
+            reconfigure = getattr(stream, "reconfigure", None)
+            if callable(reconfigure):
+                reconfigure(errors="replace")
         raise SystemExit(asyncio.run(check_connection(settings)))
 
     from .server import create_server  # imported late: keeps --version and --check fast

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import UTC, datetime
 
 import aiohttp
@@ -11,6 +12,8 @@ from .cache import TTLCache
 from .config import Settings
 from .gateway import HabiticaGateway
 from .ratelimit import RateLimiter
+
+logger = logging.getLogger(__name__)
 
 
 class AppState:
@@ -33,6 +36,11 @@ class AppState:
         async with self._lock:
             if self._gateway is None:
                 user_id, api_token = self.settings.credentials()
+                if self.settings.sends_credentials_in_clear:
+                    logger.warning(
+                        "HABITICA_BASE_URL uses plain http to a remote host: the API token "
+                        "travels unencrypted. Use https unless this is a trusted private network."
+                    )
                 self._session = aiohttp.ClientSession()
                 self._gateway = HabiticaGateway(
                     self._session,

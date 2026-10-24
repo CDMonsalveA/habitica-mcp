@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import Callable
 from pathlib import Path
@@ -173,3 +174,30 @@ def test_cli_version_and_invalid_configuration(
         main([])
     assert invalid.value.code == 2
     assert "HABITICA_MCP_RATE_LIMIT" in capsys.readouterr().err
+
+
+async def test_parallel_tool_calls_share_one_request(
+    client: Client[Any], fake: FakeHabitica
+) -> None:
+    fake.add_task(type="todo", text="Leer")
+
+    results = await asyncio.gather(
+        call(client, "habitica_list_tasks"),
+        call(client, "habitica_list_tasks", status="pending"),
+        call(client, "habitica_list_tags"),
+    )
+
+    assert all(result for result in results)
+    paths = [r.path for r in fake.api_requests()]
+    assert paths.count("/api/v3/tasks/user") == 1
+    assert paths.count("/api/v3/user") == 1
+
+
+def test_plain_http_to_a_remote_host_is_flagged() -> None:
+    def insecure(url: str) -> bool:
+        return Settings.model_validate({"base_url": url}).sends_credentials_in_clear
+
+    assert insecure("http://habitica.example.org") is True
+    assert insecure("https://habitica.com") is False
+    assert insecure("http://127.0.0.1:3000") is False
+    assert insecure("http://habitica.localhost") is False
