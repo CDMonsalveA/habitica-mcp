@@ -1,10 +1,7 @@
 """habitica-mcp: an MCP server that connects LLMs with Habitica."""
 
-from importlib.metadata import PackageNotFoundError, version
-
-try:
-    __version__ = version("habitica-mcp")
-except PackageNotFoundError:  # pragma: no cover - only when running from an uninstalled tree
-    __version__ = "0.0.0"
+# Single source of the package version: the build reads it from here and release-please
+# bumps it (together with server.json) in its release pull requests.
+__version__ = "0.1.0"  # x-release-please-version
 
 __all__ = ["__version__"]

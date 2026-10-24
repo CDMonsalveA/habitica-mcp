@@ -19,7 +19,9 @@ jobs:
       - id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
-          release-type: python
+          # Manifest mode: release-please also bumps src/habitica_mcp/__init__.py and server.json.
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
   pypi:
     needs: release-please
@@ -35,6 +37,10 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
       - run: uv build
+      - name: The built version is the released version
+        env:
+          VERSION: ${{ needs.release-please.outputs.version }}
+        run: test -f "dist/habitica_mcp-${VERSION}-py3-none-any.whl"
       - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
 
   mcp-registry:
@@ -57,10 +63,8 @@ jobs:
             sleep 20
           done
           exit 1
-      - name: Set the version in server.json
-        run: |
-          jq --arg v "$VERSION" '.version = $v | .packages[0].version = $v' server.json > server.tmp
-          mv server.tmp server.json
+      - name: server.json has the released version
+        run: jq -e --arg v "$VERSION" '.version == $v and .packages[0].version == $v' server.json
       - name: Install mcp-publisher (pinned, checksum verified)
         run: |
           base="https://github.com/modelcontextprotocol/registry/releases/download/v${PUBLISHER_VERSION}"

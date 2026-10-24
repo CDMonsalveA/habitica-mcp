@@ -1,6 +1,6 @@
 [project]
 name = "habitica-mcp"
-version = "0.1.0"
+dynamic = ["version"]
 description = "MCP server that lets LLMs read and manage your Habitica tasks safely, within Habitica's API rules."
 readme = "README.md"
 license = "MIT"
@@ -38,18 +38,31 @@ Changelog = "https://github.com/CDMonsalveA/habitica-mcp/blob/main/CHANGELOG.md"
 habitica-mcp = "habitica_mcp.cli:main"
 
 [build-system]
-requires = ["uv_build>=0.12.13,<0.13.0"]
-build-backend = "uv_build"
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+# The version lives in src/habitica_mcp/__init__.py only. A dynamic version keeps it out of
+# uv.lock, so release-please's version bumps never make the lockfile stale.
+[tool.hatch.version]
+path = "src/habitica_mcp/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/habitica_mcp"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/habitica_mcp", "tests", "README.md", "README.es.md", "CHANGELOG.md", "LICENSE"]
 
 [dependency-groups]
 dev = [
     "dirty-equals>=0.11",
     "inline-snapshot>=0.35.4",
+    "pre-commit>=4.7.0",
     "pyright>=1.1.414",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.7",
+    "zizmor>=1.31.1",
 ]
 evals = [
     "pyyaml>=6.0",
@@ -76,7 +89,7 @@ ignore = [
 "tests/**" = ["S101", "S105", "S106", "PLR2004", "DTZ001"]
 
 [tool.pyright]
-include = ["src", "tests", "evals"]
+include = ["src", "tests", "evals", "scripts"]
 pythonVersion = "3.12"
 typeCheckingMode = "standard"
 strict = ["src"]
