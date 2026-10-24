@@ -5,8 +5,7 @@ on:
     branches: [main]
   pull_request:
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -21,9 +20,13 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python: ["3.12", "3.13", "3.14"]
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
           python-version: ${{ matrix.python }}
           enable-cache: true
@@ -39,9 +42,13 @@ jobs:
 
   package:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
       - name: Build
         run: uv build
       - name: The built wheel starts
@@ -50,3 +57,5 @@ jobs:
         run: |
           uv export --no-dev --no-emit-project --format requirements-txt > requirements.txt
           uvx pip-audit --requirement requirements.txt --disable-pip
+      - name: Workflow security audit
+        run: uvx zizmor --offline --min-severity medium .github/workflows

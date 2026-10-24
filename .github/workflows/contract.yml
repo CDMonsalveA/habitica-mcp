@@ -1,21 +1,25 @@
 name: Live contract tests
 
 # Talks to the real Habitica API with a dedicated test account to detect API changes.
+# Never runs on pull requests, so secrets are not exposed to code from forks.
 on:
   schedule:
     - cron: "17 6 * * 1" # Mondays 06:17 UTC
   workflow_dispatch:
 
-permissions:
-  contents: read
-  issues: write
+permissions: {}
 
 jobs:
   contract:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
       - run: uv sync --locked
       - name: Run contract tests
         env:
@@ -29,6 +33,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: >
           gh issue create
+          --repo "$GITHUB_REPOSITORY"
           --title "Live contract tests failed on $(date -u +%Y-%m-%d)"
           --label habitica-api
           --body "The weekly contract tests against habitica.com failed: $RUN_URL

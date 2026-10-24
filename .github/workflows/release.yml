@@ -4,19 +4,20 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       released: ${{ steps.release.outputs.release_created }}
       version: ${{ steps.release.outputs.version }}
     steps:
       - id: release
-        uses: googleapis/release-please-action@v5
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           release-type: python
 
@@ -27,12 +28,14 @@ jobs:
     environment: pypi
     permissions:
       contents: read
-      id-token: write # PyPI trusted publishing, no API token stored
+      id-token: write # PyPI trusted publishing: no API token stored anywhere
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
       - run: uv build
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
 
   mcp-registry:
     needs: [release-please, pypi]
@@ -42,8 +45,11 @@ jobs:
       id-token: write # GitHub OIDC login to the MCP Registry
     env:
       VERSION: ${{ needs.release-please.outputs.version }}
+      PUBLISHER_VERSION: "1.8.4"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Wait for PyPI to list the new version
         run: |
           for attempt in $(seq 1 30); do
@@ -55,10 +61,12 @@ jobs:
         run: |
           jq --arg v "$VERSION" '.version = $v | .packages[0].version = $v' server.json > server.tmp
           mv server.tmp server.json
-      - name: Install mcp-publisher
+      - name: Install mcp-publisher (pinned, checksum verified)
         run: |
-          os=$(uname -s | tr '[:upper:]' '[:lower:]')
-          arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_${os}_${arch}.tar.gz" | tar xz mcp-publisher
+          base="https://github.com/modelcontextprotocol/registry/releases/download/v${PUBLISHER_VERSION}"
+          curl -sSfLO "$base/mcp-publisher_linux_amd64.tar.gz"
+          curl -sSfLO "$base/registry_${PUBLISHER_VERSION}_checksums.txt"
+          grep " mcp-publisher_linux_amd64.tar.gz$" "registry_${PUBLISHER_VERSION}_checksums.txt" | sha256sum --check -
+          tar xzf mcp-publisher_linux_amd64.tar.gz mcp-publisher
       - run: ./mcp-publisher login github-oidc
       - run: ./mcp-publisher publish
