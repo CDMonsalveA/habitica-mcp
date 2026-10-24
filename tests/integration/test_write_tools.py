@@ -398,3 +398,52 @@ async def test_delete_explains_challenge_tasks(client: Client[Any], fake: FakeHa
 
     assert "belongs to the challenge '30 días'" in message
     assert all(r.method == "GET" for r in fake.api_requests())
+
+
+async def test_a_typical_session_fits_in_habiticas_request_budget(
+    client: Client[Any], fake: FakeHabitica
+) -> None:
+    """The live walkthrough that once hit the limit: writes must not force full refetches."""
+    tag = "habitica-mcp-prueba"
+    await call(client, "habitica_get_overview")
+    todo = await call(
+        client,
+        "habitica_create_task",
+        task_type="todo",
+        text="[habitica-mcp] Probar",
+        due_date="2026-09-17",
+        tags=[tag],
+        checklist=["Crear", "Marcar"],
+    )
+    todo_id = todo["task"]["id"]
+    await call(
+        client, "habitica_create_task", task_type="daily", text="[habitica-mcp] Diaria", tags=[tag]
+    )
+    await call(
+        client, "habitica_create_task", task_type="habit", text="[habitica-mcp] Hábito", tags=[tag]
+    )
+    await call(
+        client,
+        "habitica_create_task",
+        task_type="reward",
+        text="[habitica-mcp] Premio",
+        cost=5,
+        tags=[tag],
+    )
+    listed = await call(client, "habitica_list_tasks", tag=tag)
+    await call(client, "habitica_get_task", task="probar")
+    await call(client, "habitica_update_task", task=todo_id, difficulty="hard")
+    await call(client, "habitica_manage_checklist", task=todo_id, action="toggle", item="crear")
+    await call(client, "habitica_score_task", task="hábito")
+    await call(client, "habitica_score_task", task=todo_id)
+    undone = await call(client, "habitica_score_task", task=todo_id, direction="down")
+    preview = await call(client, "habitica_score_task", task="premio")
+    await call(client, "habitica_delete_task", task="premio")
+    tags = await call(client, "habitica_list_tags")
+
+    assert listed["total_matching"] == 4
+    assert undone["status"] == "done"
+    assert preview["status"] == "confirmation_required"
+    assert [t["tasks"] for t in tags["tags"] if t["name"] == tag] == [4]
+    # 16 tool calls: 22 requests now, 28 before writes patched the cache (Habitica allows 30/min).
+    assert len(fake.api_requests()) <= 24, [(r.method, r.path) for r in fake.api_requests()]

@@ -52,12 +52,18 @@ class HabiticaConnectionError(HabiticaMCPError):
 class RateLimitedError(HabiticaMCPError):
     """The request would exceed Habitica's rate limit."""
 
-    def __init__(self, retry_after: float) -> None:
+    def __init__(self, retry_after: float, *, by_habitica: bool = False) -> None:
         self.retry_after = retry_after
+        self.by_habitica = by_habitica
+        cause = (
+            "Habitica answered 'too many requests' (its rate limit is 30 per minute)"
+            if by_habitica
+            else "This server's request budget, kept under Habitica's rate limit of 30 requests "
+            "per minute, is used up"
+        )
         super().__init__(
-            f"Habitica's rate limit (30 requests per minute) was reached. Wait about "
-            f"{max(1, round(retry_after))} seconds before calling Habitica tools again, "
-            "and prefer filters over repeated listing."
+            f"{cause}. Wait about {max(1, round(retry_after))} seconds before calling Habitica "
+            "tools again; reuse ids from earlier results and prefer filters over repeated listing."
         )
 
 

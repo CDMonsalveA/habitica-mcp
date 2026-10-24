@@ -118,7 +118,7 @@ dentist on Friday, hard difficulty, with a checklist: find the number, ask about
 | `HABITICA_BASE_URL` | `https://habitica.com` | Another Habitica instance (self-hosted or a test double) |
 | `HABITICA_X_CLIENT` | `<maintainer id>-habitica-mcp` | Override the `x-client` header (for forks) |
 | `HABITICA_MCP_RATE_LIMIT` | `25` | Max Habitica requests per minute (Habitica allows 30) |
-| `HABITICA_MCP_MAX_WAIT` | `10` | Seconds to wait for a free request slot before failing fast |
+| `HABITICA_MCP_MAX_WAIT` | `30` | Seconds a tool may wait for a free request slot before failing fast |
 | `HABITICA_MCP_CACHE_TTL` | `15` | Seconds reads are reused between tool calls (`0` disables) |
 | `HABITICA_MCP_TIMEOUT` | `20` | Request timeout in seconds |
 | `HABITICA_MCP_LOG_LEVEL` | `WARNING` | Logs go to stderr; `INFO` adds one metrics line per tool call |

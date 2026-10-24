@@ -67,7 +67,7 @@ class Settings(BaseSettings):
         description="Client-side cap on Habitica requests per minute (Habitica allows 30).",
     )
     max_rate_limit_wait_seconds: float = Field(
-        default=10.0,
+        default=30.0,
         ge=0,
         le=60,
         validation_alias="HABITICA_MCP_MAX_WAIT",

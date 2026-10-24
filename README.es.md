@@ -74,7 +74,7 @@ dificultad difícil, con checklist: buscar el número, preguntar por limpieza"* 
 | `HABITICA_BASE_URL` | `https://habitica.com` | Otra instancia de Habitica (autoalojada o de pruebas) |
 | `HABITICA_X_CLIENT` | `<id del mantenedor>-habitica-mcp` | Cambia el header `x-client` (para forks) |
 | `HABITICA_MCP_RATE_LIMIT` | `25` | Máximo de peticiones por minuto (Habitica permite 30) |
-| `HABITICA_MCP_MAX_WAIT` | `10` | Segundos de espera por un turno libre antes de fallar rápido |
+| `HABITICA_MCP_MAX_WAIT` | `30` | Segundos que una herramienta puede esperar un turno libre antes de fallar |
 | `HABITICA_MCP_CACHE_TTL` | `15` | Segundos que se reutilizan las lecturas (`0` desactiva) |
 | `HABITICA_MCP_TIMEOUT` | `20` | Timeout por petición en segundos |
 | `HABITICA_MCP_LOG_LEVEL` | `WARNING` | Logs a stderr; `INFO` agrega una línea de métricas por llamada |

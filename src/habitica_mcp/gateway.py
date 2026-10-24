@@ -17,7 +17,7 @@ from typing import Any
 from urllib.parse import quote
 
 import aiohttp
-from habiticalib import Direction, TagsUser, TaskData, TaskFilter, UserData
+from habiticalib import Direction, TagsUser, TaskData, TaskFilter, TaskType, UserData
 from multidict import CIMultiDictProxy
 
 from . import __version__
@@ -44,7 +44,12 @@ USER_AGENT = f"{APP_NAME}/{__version__} (+{REPOSITORY_URL})"
 CLOCK_FIELDS = ("preferences.timezoneOffset", "preferences.dayStart")
 # Habitica only computes ``needsCron`` for the whole user document; these let us derive it.
 CRON_FIELDS = ("lastCron", "preferences.timezoneOffsetAtLastCron")
-_WRITE_CACHE_PREFIXES = ("user:", "tasks:", "task:", "tags")
+# What each kind of write can change. Narrow invalidation matters: Habitica allows only 30
+# requests per minute, and agents often chain several writes.
+_TASK_WRITE = ("tasks:", "task:")  # create/update/checklist: the returned task refreshes the list
+_SCORE_WRITE = ("tasks:", "task:", "user:")  # scoring also changes stats, streaks, completion
+_TAG_WRITE = ("tags", "tasks:", "task:", "user:")  # deleting a tag removes it from tasks
+_ACTIVE_TASKS = "tasks:active"
 
 
 class HabiticaGateway:
@@ -162,53 +167,52 @@ class HabiticaGateway:
     # ----------------------------------------------------------------- writes
 
     async def create_task(self, body: Mapping[str, Any]) -> TaskData:
-        data = await self._write("POST", "/api/v3/tasks/user", body)
-        return _parse(TaskData, data, "the created task")
+        return await self._write_task("POST", "/api/v3/tasks/user", body)
 
     async def update_task(self, task_id: str, body: Mapping[str, Any]) -> TaskData:
-        data = await self._write("PUT", f"/api/v3/tasks/{_segment(task_id)}", body)
-        return _parse(TaskData, data, "the updated task")
+        return await self._write_task("PUT", f"/api/v3/tasks/{_segment(task_id)}", body)
 
     async def delete_task(self, task_id: str) -> None:
-        await self._write("DELETE", f"/api/v3/tasks/{_segment(task_id)}")
+        snapshot: list[TaskData] | None = self._cache.get(_ACTIVE_TASKS)
+        await self._write("DELETE", f"/api/v3/tasks/{_segment(task_id)}", invalidate=_TASK_WRITE)
+        if snapshot is not None:
+            self._cache.set(_ACTIVE_TASKS, [t for t in snapshot if str(t.id) != task_id])
 
     async def score_task(self, task_id: str, direction: Direction) -> dict[str, Any]:
         """Score a task. Returns Habitica's raw stats payload (``delta``, ``_tmp``...)."""
         path = f"/api/v3/tasks/{_segment(task_id)}/score/{direction.value}"
-        data = await self._write("POST", path)
+        data = await self._write("POST", path, invalidate=_SCORE_WRITE)
         if not isinstance(data, dict):
             raise UnexpectedResponseError("the score result")
         return data  # pyright: ignore[reportUnknownVariableType]
 
     async def add_checklist_item(self, task_id: str, text: str) -> TaskData:
-        data = await self._write(
-            "POST", f"/api/v3/tasks/{_segment(task_id)}/checklist", {"text": text}
-        )
-        return _parse(TaskData, data, "the task")
+        path = f"/api/v3/tasks/{_segment(task_id)}/checklist"
+        return await self._write_task("POST", path, {"text": text})
 
     async def update_checklist_item(self, task_id: str, item_id: str, text: str) -> TaskData:
         path = f"/api/v3/tasks/{_segment(task_id)}/checklist/{_segment(item_id)}"
-        return _parse(TaskData, await self._write("PUT", path, {"text": text}), "the task")
+        return await self._write_task("PUT", path, {"text": text})
 
     async def score_checklist_item(self, task_id: str, item_id: str) -> TaskData:
         path = f"/api/v3/tasks/{_segment(task_id)}/checklist/{_segment(item_id)}/score"
-        return _parse(TaskData, await self._write("POST", path), "the task")
+        return await self._write_task("POST", path)
 
     async def delete_checklist_item(self, task_id: str, item_id: str) -> TaskData:
         path = f"/api/v3/tasks/{_segment(task_id)}/checklist/{_segment(item_id)}"
-        return _parse(TaskData, await self._write("DELETE", path), "the task")
+        return await self._write_task("DELETE", path)
 
     async def create_tag(self, name: str) -> TagsUser:
-        return _parse(
-            TagsUser, await self._write("POST", "/api/v3/tags", {"name": name}), "the tag"
-        )
+        data = await self._write("POST", "/api/v3/tags", {"name": name}, invalidate=_TAG_WRITE)
+        return _parse(TagsUser, data, "the tag")
 
     async def update_tag(self, tag_id: str, name: str) -> TagsUser:
-        data = await self._write("PUT", f"/api/v3/tags/{_segment(tag_id)}", {"name": name})
+        path = f"/api/v3/tags/{_segment(tag_id)}"
+        data = await self._write("PUT", path, {"name": name}, invalidate=_TAG_WRITE)
         return _parse(TagsUser, data, "the tag")
 
     async def delete_tag(self, tag_id: str) -> None:
-        await self._write("DELETE", f"/api/v3/tags/{_segment(tag_id)}")
+        await self._write("DELETE", f"/api/v3/tags/{_segment(tag_id)}", invalidate=_TAG_WRITE)
 
     # --------------------------------------------------------------- plumbing
 
@@ -233,12 +237,30 @@ class HabiticaGateway:
         self._cache.set(key, value)
         return value
 
-    async def _write(self, method: str, path: str, body: Mapping[str, Any] | None = None) -> Any:
+    async def _write(
+        self,
+        method: str,
+        path: str,
+        body: Mapping[str, Any] | None = None,
+        *,
+        invalidate: Sequence[str],
+    ) -> Any:
         try:
             return await self._request(method, path, json_body=body)
         finally:
             # Even a failed write may have changed something server-side.
-            self._cache.invalidate(*_WRITE_CACHE_PREFIXES)
+            self._cache.invalidate(*invalidate)
+
+    async def _write_task(
+        self, method: str, path: str, body: Mapping[str, Any] | None = None
+    ) -> TaskData:
+        """A write that returns the task: patch it into the cached task list, don't refetch."""
+        snapshot: list[TaskData] | None = self._cache.get(_ACTIVE_TASKS)
+        data = await self._write(method, path, body, invalidate=_TASK_WRITE)
+        task = _parse(TaskData, data, "the task")
+        if snapshot is not None:
+            self._cache.set(_ACTIVE_TASKS, _upsert(snapshot, task))
+        return task
 
     async def _request(
         self,
@@ -282,7 +304,7 @@ class HabiticaGateway:
                 if not retried and retry_after <= self._max_wait:
                     retried = True
                     continue
-                raise RateLimitedError(retry_after)
+                raise RateLimitedError(retry_after, by_habitica=True)
 
             payload = _json_or_none(text)
             if status >= 400:
@@ -310,6 +332,23 @@ class HabiticaGateway:
 
 def _segment(value: str) -> str:
     return quote(value, safe="")
+
+
+def _upsert(tasks: Sequence[TaskData], task: TaskData) -> list[TaskData]:
+    """Replace (or append) ``task`` in an active-task list; completed to-dos are not active."""
+    active = not (task.Type is TaskType.TODO and task.completed)
+    result: list[TaskData] = []
+    replaced = False
+    for existing in tasks:
+        if existing.id == task.id:
+            replaced = True
+            if active:
+                result.append(task)
+        else:
+            result.append(existing)
+    if not replaced and active:
+        result.append(task)
+    return result
 
 
 def _json_or_none(text: str) -> Any:
