@@ -5,6 +5,13 @@ All notable changes are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Tool names, parameters and result fields are the
 public API: removing or renaming them is a breaking change.
 
+## 0.1.0 (2026-10-24)
+
+
+### Features
+
+* habitica-mcp v0.1 - MCP server for Habitica ([9fb1f46](https://github.com/CDMonsalveA/habitica-mcp/commit/9fb1f46e25a812fd9189575a02ac6bcada0c6873))
+
 ## [Unreleased]
 
 ### Added
