@@ -16,6 +16,9 @@
 - `habiticalib` is used for its typed models (`<0.5`). If it adds `history=false` support or
   checklist endpoints, consider using its client directly; contribute such improvements upstream.
 - Python support follows CI (3.12-3.14). Drop a version only in a minor release.
+- Pre-commit hooks: `uv run pre-commit autoupdate --freeze` updates the pinned hook repositories
+  (keep the `# frozen: vX` comments). The `uv==` pin inside `.pre-commit-config.yaml` is updated by
+  hand when uv releases a new minor version.
 
 ## When the live contract tests fail
 
@@ -28,23 +31,31 @@
 
 ## Releasing
 
-Releases are automated with release-please:
+Releases are automated with release-please in manifest mode (`release-please-config.json`):
 
-1. Merge PRs with Conventional Commit titles into `main`.
-2. release-please opens/updates a release PR with the version bump and changelog. Merging it:
-   creates the GitHub release, publishes to PyPI with trusted publishing, then publishes `server.json`
-   to the MCP Registry (GitHub OIDC).
+1. Merge commits with Conventional Commit messages into `main` (the `conventional-commit` hook
+   enforces them; `feat` bumps the minor version, `fix` the patch, `!` a breaking change).
+2. release-please opens or updates a release PR. It bumps the version in its only source,
+   `src/habitica_mcp/__init__.py`, and in `server.json`, and writes the changelog. The version is
+   dynamic in `pyproject.toml`, so `uv.lock` never goes stale on a bump.
+3. Merging the release PR creates the GitHub release; the `pypi` job waits for your approval in the
+   `pypi` environment, publishes with trusted publishing, and then `server.json` is published to the
+   MCP Registry (GitHub OIDC). GitHub asks to approve the CI run of release PRs because a bot
+   opened them: approve it from the PR's Checks tab.
 
-One-time setup (done by the maintainer):
+Repository setup already in place: public repo, secret scanning with push protection, Dependabot
+alerts and security updates, CodeQL default setup, private vulnerability reporting, read-only
+`GITHUB_TOKEN` by default, only GitHub-owned/verified/allow-listed actions pinned to SHAs, `main`
+protected against deletion and force pushes, and the `pypi` environment (deploys only from `main`,
+manual approval). `MAINTAINER_USER_ID` in `src/habitica_mcp/const.py` holds the maintainer's
+Habitica User ID for the `x-client` header.
 
-- PyPI: create the project `habitica-mcp` and add a trusted publisher for
-  `CDMonsalveA/habitica-mcp`, workflow `release.yml`, environment `pypi`.
-- GitHub: create the `pypi` environment; add secrets `HABITICA_TEST_USER_ID`,
-  `HABITICA_TEST_API_TOKEN` (test account) and, for evals, `CLAUDE_CODE_OAUTH_TOKEN`.
-- Set `MAINTAINER_USER_ID` in `src/habitica_mcp/const.py` to the maintainer's Habitica User ID so the
-  `x-client` header identifies the project, as Habitica's guidelines ask.
-- Enable private vulnerability reporting, branch protection on `main` (required CI checks) and
-  GitHub's default code scanning.
+Still to do by the maintainer:
+
+- PyPI: add a pending trusted publisher for project `habitica-mcp`, owner `CDMonsalveA`,
+  repository `habitica-mcp`, workflow `release.yml`, environment `pypi`.
+- Secrets (optional): `HABITICA_TEST_USER_ID` and `HABITICA_TEST_API_TOKEN` from a dedicated test
+  account for the weekly contract tests; `CLAUDE_CODE_OAUTH_TOKEN` for the evals workflow.
 
 ## Rotating credentials
 

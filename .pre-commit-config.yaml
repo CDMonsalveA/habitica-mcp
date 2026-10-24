@@ -1,0 +1,101 @@
+# Checks that run before every commit (and the full test suite before every push).
+#
+#   uv run pre-commit install          # once per clone: installs the commit, message and push hooks
+#   uv run pre-commit run --all-files  # check everything now
+#
+# Project tools (ruff, pyright, pytest, zizmor) run through `uv run --frozen`, so hooks use
+# exactly the versions in uv.lock. The hooks bring their own pinned uv, so they work even
+# when uv is not on PATH.
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [pre-commit]
+minimum_pre_commit_version: "4.0.0"
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # frozen: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+  - repo: local
+    hooks:
+      # --- secrets and commit messages (standard library only) ---
+      - id: no-secrets
+        name: no secrets (Habitica tokens, API keys, .env files)
+        entry: python scripts/check_secrets.py
+        language: python
+        types: [text]
+      - id: conventional-commit
+        name: commit message follows Conventional Commits
+        entry: python scripts/check_commit_msg.py
+        language: python
+        stages: [commit-msg]
+
+      # --- project tools at the versions locked in uv.lock ---
+      - id: uv-lock
+        name: uv.lock is up to date
+        entry: uv lock --check
+        language: python
+        additional_dependencies: ["uv==0.13.5"]
+        files: ^(pyproject\.toml|uv\.lock)$
+        pass_filenames: false
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --frozen ruff format
+        language: python
+        additional_dependencies: ["uv==0.13.5"]
+        types_or: [python, pyi]
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --frozen ruff check --fix --exit-non-zero-on-fix
+        language: python
+        additional_dependencies: ["uv==0.13.5"]
+        types_or: [python, pyi]
+      - id: pyright
+        name: pyright (strict for src)
+        entry: uv run --frozen pyright
+        language: python
+        additional_dependencies: ["uv==0.13.5"]
+        types_or: [python, pyi]
+        pass_filenames: false
+      - id: project-rules
+        name: project rules (versions, registry entry, documented tools, eval cases, pinned actions)
+        entry: uv run --frozen python scripts/check_project.py
+        language: python
+        additional_dependencies: ["uv==0.13.5"]
+        pass_filenames: false
+        always_run: true
+      - id: fast-tests
+        name: fast tests (unit + MCP tool contract)
+        entry: uv run --frozen pytest -q -p no:cacheprovider tests/unit tests/protocol
+        language: python
+        additional_dependencies: ["uv==0.13.5"]
+        files: ^(src|tests|evals|scripts)/|^pyproject\.toml$
+        pass_filenames: false
+      - id: zizmor
+        name: zizmor (GitHub Actions security)
+        entry: uv run --frozen zizmor --offline --min-severity medium
+        language: python
+        additional_dependencies: ["uv==0.13.5"]
+        files: ^\.github/workflows/
+
+      # --- before pushing: everything, including the stdio end-to-end test ---
+      - id: full-tests
+        name: full test suite
+        entry: uv run --frozen pytest -q -p no:cacheprovider
+        language: python
+        additional_dependencies: ["uv==0.13.5"]
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true

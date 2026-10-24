@@ -86,6 +86,7 @@ Tus credenciales no salen de tu equipo: el servidor corre localmente por stdio y
 
 ```bash
 uv sync
+uv run pre-commit install    # verificaciones antes de cada commit (ver CONTRIBUTING.md)
 uv run pytest
 uv run ruff check . && uv run pyright
 uv run python -m tests.fake_habitica --port 8765

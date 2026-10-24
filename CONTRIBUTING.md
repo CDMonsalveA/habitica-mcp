@@ -6,11 +6,25 @@ Thanks for helping! Issues and pull requests are welcome in English or Spanish.
 
 ```bash
 uv sync
-uv run pytest
-uv run ruff format . && uv run ruff check . && uv run pyright
+uv run pre-commit install           # once: checks run on every commit, message and push
+uv run pre-commit run --all-files   # everything, now
 ```
 
-Tests never touch the real Habitica: they use the in-memory test double in `tests/fake_habitica`.
+The hooks block a commit when something breaks the rules:
+
+| Hook | Checks |
+|---|---|
+| file hygiene | LF line endings, no trailing whitespace, valid YAML/TOML/JSON, no large files, no private keys |
+| `no-secrets` | no Habitica tokens or API keys (including the values of `HABITICA_API_TOKEN` and similar variables in your environment or `.env`), no `.env` files |
+| `uv-lock`, `ruff-format`, `ruff-check`, `pyright` | lockfile in sync, formatting, lint, types (strict for `src/`) |
+| `project-rules` | one version in `__init__.py` and `server.json`, registry entry matches the package, every tool documented in both READMEs, valid eval cases, GitHub Actions pinned to commit SHAs |
+| `fast-tests` | unit tests and the MCP tool contract |
+| `zizmor` | GitHub Actions security |
+| `conventional-commit` | commit messages like `feat(tools): ...` (they drive versions and the changelog) |
+| `full-tests` (pre-push) | the whole suite, including the stdio end-to-end test |
+
+The same checks run in CI, so a pull request cannot skip them. Tests never touch the real
+Habitica: they use the in-memory test double in `tests/fake_habitica`.
 
 ## Ground rules
 

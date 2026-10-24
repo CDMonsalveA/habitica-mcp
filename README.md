@@ -130,6 +130,7 @@ Credentials stay on your machine: the server runs locally over stdio and only ta
 
 ```bash
 uv sync                      # install dependencies
+uv run pre-commit install    # checks before every commit (see CONTRIBUTING.md)
 uv run pytest                # unit, integration, protocol and stdio end-to-end tests
 uv run ruff check . && uv run pyright
 uv run python -m tests.fake_habitica --port 8765   # the Habitica test double, standalone

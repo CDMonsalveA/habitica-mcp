@@ -57,5 +57,21 @@ jobs:
         run: |
           uv export --no-dev --no-emit-project --format requirements-txt > requirements.txt
           uvx pip-audit --requirement requirements.txt --disable-pip
-      - name: Workflow security audit
-        run: uvx zizmor --offline --min-severity medium .github/workflows
+
+  pre-commit:
+    # The same checks as the local hooks, for contributors who did not install them.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: All hooks on all files (types and tests already run in the test matrix)
+        env:
+          SKIP: pyright,fast-tests
+        run: uv run pre-commit run --all-files --show-diff-on-failure
