@@ -109,7 +109,8 @@ def task_view(
         fields["streak"] = task.streak or 0
         if detailed:
             fields["schedule"] = schedule_view(task, clock)
-            fields["next_due"] = [clock.local_date(when) for when in task.nextDue[:MAX_NEXT_DUE]]
+            upcoming = [when for when in task.nextDue if when is not None]
+            fields["next_due"] = [clock.local_date(when) for when in upcoming[:MAX_NEXT_DUE]]
     elif kind == "todo":
         due = todo_due_date(task, clock)
         if due is not None:
