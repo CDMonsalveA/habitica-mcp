@@ -148,6 +148,20 @@ class HabiticaGateway:
 
         return await self._cached(key, load)
 
+    async def get_tasks_with_history(self) -> list[TaskData]:
+        """Active tasks including their score history (heavy: only for adherence reports).
+
+        Cached under ``tasks:`` so every task write invalidates it.
+        """
+
+        async def load() -> list[TaskData]:
+            data = await self._request("GET", "/api/v3/tasks/user")
+            if not isinstance(data, list):
+                raise UnexpectedResponseError("the task list")
+            return [_parse(TaskData, item, "a task") for item in data]  # pyright: ignore[reportUnknownVariableType]
+
+        return await self._cached("tasks:history", load)
+
     async def get_task(self, task_id: str) -> TaskData:
         async def load() -> TaskData:
             data = await self._request("GET", f"/api/v3/tasks/{_segment(task_id)}")

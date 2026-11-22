@@ -50,6 +50,7 @@ from ._common import (
     Format,
     TaskReference,
     gateway_for,
+    unknown_tag_message,
 )
 
 ListStatus = Literal["all", "pending", "due_today", "overdue", "completed"]
@@ -99,7 +100,7 @@ async def list_tasks(
     if tag:
         found = find_tag(tags, tag)
         if found is None:
-            raise ToolInputError(_unknown_tag_message(tag, tags))
+            raise ToolInputError(unknown_tag_message(tag, tags))
         tasks = [t for t in tasks if found.id in t.tags]
     if search and (key := normalize(search)):
         tasks = [
@@ -316,7 +317,7 @@ async def update_task(
         for reference_tag in remove_tags or []:
             found = find_tag(known_tags, reference_tag)
             if found is None:
-                raise ToolInputError(_unknown_tag_message(reference_tag, known_tags))
+                raise ToolInputError(unknown_tag_message(reference_tag, known_tags))
             remove_ids.add(str(found.id))
         new_tags = [t for t in current if t not in remove_ids]
         new_tags += [t for t in add_ids if t not in new_tags and t not in remove_ids]
@@ -528,11 +529,6 @@ async def delete_task(
         )
     await gateway.delete_task(str(task.id))
     return TaskResult(status="done", message=f"Deleted the {kind} '{task.text}'.", task=view)
-
-
-def _unknown_tag_message(reference: str, tags: Sequence[TagsUser]) -> str:
-    available = ", ".join(sorted(t.name or "" for t in tags)) or "none"
-    return f"Tag {reference!r} does not exist. Existing tags: {available}."
 
 
 # ---------------------------------------------------------------------- registration

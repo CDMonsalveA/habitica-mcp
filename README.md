@@ -34,6 +34,7 @@ This server focuses on being **correct, safe and maintainable**:
 | `habitica_list_tasks` | Filter by type, status (pending, due today, overdue, completed), tag, text | no |
 | `habitica_get_task` | Full details of one task (checklist, schedule, dates) | no |
 | `habitica_list_tags` | Tags and how many tasks use them | no |
+| `habitica_get_adherence` | Real completion rate of dailies and +/- counts of habits over the last N days | no |
 | `habitica_create_task` | Create a habit, daily (with schedule), to-do (due date, checklist) or reward | yes |
 | `habitica_update_task` | Change text, notes, difficulty, due date, schedule, tags... | yes |
 | `habitica_score_task` | Check off / undo dailies and to-dos, +/- habits, buy rewards (`confirm`) | yes |
@@ -114,7 +115,7 @@ dentist on Friday, hard difficulty, with a checklist: find the number, ask about
 |---|---|---|
 | `HABITICA_USER_ID` | — | Your Habitica User ID (required to call Habitica) |
 | `HABITICA_API_TOKEN` | — | Your Habitica API Token (required, never logged) |
-| `HABITICA_MCP_MODE` | `standard` | `read-only` exposes only the four read tools |
+| `HABITICA_MCP_MODE` | `standard` | `read-only` exposes only the five read tools |
 | `HABITICA_BASE_URL` | `https://habitica.com` | Another Habitica instance (self-hosted or a test double) |
 | `HABITICA_X_CLIENT` | `<maintainer id>-habitica-mcp` | Override the `x-client` header (for forks) |
 | `HABITICA_MCP_RATE_LIMIT` | `25` | Max Habitica requests per minute (Habitica allows 30) |

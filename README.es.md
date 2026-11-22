@@ -36,6 +36,7 @@ mantenible**:
 | `habitica_list_tasks` | Filtra por tipo, estado (pendiente, de hoy, vencida, completada), etiqueta, texto | no |
 | `habitica_get_task` | Detalle completo de una tarea (checklist, horario, fechas) | no |
 | `habitica_list_tags` | Etiquetas y cuántas tareas las usan | no |
+| `habitica_get_adherence` | Cumplimiento real de diarias y conteos +/- de hábitos en los últimos N días | no |
 | `habitica_create_task` | Crea hábito, diaria (con horario), pendiente (fecha, checklist) o recompensa | sí |
 | `habitica_update_task` | Cambia texto, notas, dificultad, fecha, horario, etiquetas... | sí |
 | `habitica_score_task` | Marca/desmarca diarias y pendientes, +/- en hábitos, compra recompensas (`confirm`) | sí |
@@ -70,7 +71,7 @@ dificultad difícil, con checklist: buscar el número, preguntar por limpieza"* 
 |---|---|---|
 | `HABITICA_USER_ID` | — | Tu User ID de Habitica (necesario para llamar a Habitica) |
 | `HABITICA_API_TOKEN` | — | Tu API Token de Habitica (necesario, nunca se registra en logs) |
-| `HABITICA_MCP_MODE` | `standard` | `read-only` expone solo las cuatro herramientas de lectura |
+| `HABITICA_MCP_MODE` | `standard` | `read-only` expone solo las cinco herramientas de lectura |
 | `HABITICA_BASE_URL` | `https://habitica.com` | Otra instancia de Habitica (autoalojada o de pruebas) |
 | `HABITICA_X_CLIENT` | `<id del mantenedor>-habitica-mcp` | Cambia el header `x-client` (para forks) |
 | `HABITICA_MCP_RATE_LIMIT` | `25` | Máximo de peticiones por minuto (Habitica permite 30) |

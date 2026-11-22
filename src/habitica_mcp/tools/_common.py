@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Annotated, cast
 
 from fastmcp import Context
+from habiticalib import TagsUser
 from mcp_types import ToolAnnotations
 from pydantic import Field
 
@@ -69,3 +71,8 @@ def required(value: str | None, name: str, action: str) -> str:
     if value is None or not value.strip():
         raise ToolInputError(f"'{name}' is required when action is '{action}'.")
     return value.strip()
+
+
+def unknown_tag_message(reference: str, tags: Sequence[TagsUser]) -> str:
+    available = ", ".join(sorted(t.name or "" for t in tags)) or "none"
+    return f"Tag {reference!r} does not exist. Existing tags: {available}."

@@ -29,3 +29,6 @@ MAX_HEALTH: Final = 50
 
 # User preferences (time zone, custom day start) change rarely; keep them longer than tasks.
 PREFERENCES_TTL_SECONDS: Final = 600.0
+
+ADHERENCE_LIST_CAP: Final = 50
+ADHERENCE_RECENT_DAYS: Final = 7
