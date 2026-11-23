@@ -36,6 +36,11 @@
           "name": "HABITICA_MCP_MODE",
           "description": "standard or read-only",
           "default": "standard"
+        },
+        {
+          "name": "HABITICA_MCP_PRIVACY",
+          "description": "block, redact or off: what to do with writes that contain personal or secret data",
+          "default": "block"
         }
       ]
     }

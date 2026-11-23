@@ -21,6 +21,10 @@ This server focuses on being **correct, safe and maintainable**:
   limit (and obeys `Retry-After` / `X-RateLimit-*`), never runs the day rollover (cron).
 - **Safe by default**: deleting, removing checklist items or tags and buying rewards return a
   preview until the model calls again with `confirm=true`. A `read-only` mode hides every write tool.
+- **Keeps personal data out of Habitica**: as Habitica itself advises, tasks should not hold
+  sensitive information. Every write is checked before it leaves your machine; phone numbers,
+  emails, card, ID or account numbers, passwords and API keys are refused (or redacted), and the
+  model is told to write tasks in general, anonymous terms.
 - **Designed for LLMs**: few workflow-level tools, references by id *or* text ("mark meditation as
   done"), compact responses without Habitica's bulky history, and error messages that say what to do.
 - **Tested and measured**: an in-memory Habitica test double, a snapshot of the tool contract, live
@@ -116,6 +120,7 @@ dentist on Friday, hard difficulty, with a checklist: find the number, ask about
 | `HABITICA_USER_ID` | — | Your Habitica User ID (required to call Habitica) |
 | `HABITICA_API_TOKEN` | — | Your Habitica API Token (required, never logged) |
 | `HABITICA_MCP_MODE` | `standard` | `read-only` exposes only the five read tools |
+| `HABITICA_MCP_PRIVACY` | `block` | Writes with personal or secret data: `block` refuses them, `redact` replaces the data with `[redacted]`, `off` sends them as-is |
 | `HABITICA_BASE_URL` | `https://habitica.com` | Another Habitica instance (self-hosted or a test double) |
 | `HABITICA_X_CLIENT` | `<maintainer id>-habitica-mcp` | Override the `x-client` header (for forks) |
 | `HABITICA_MCP_RATE_LIMIT` | `25` | Max Habitica requests per minute (Habitica allows 30) |

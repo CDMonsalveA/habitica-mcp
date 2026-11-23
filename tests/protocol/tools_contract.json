@@ -104,7 +104,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "No personal or secret data"
         },
         "schedule": {
           "anyOf": [
@@ -222,7 +223,7 @@
           "type": "string"
         },
         "text": {
-          "description": "Task title",
+          "description": "Task title, in general terms without personal data",
           "maxLength": 500,
           "minLength": 1,
           "type": "string"

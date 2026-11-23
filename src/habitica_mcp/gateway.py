@@ -28,6 +28,7 @@ from .errors import (
     HabiticaAPIError,
     HabiticaConnectionError,
     RateLimitedError,
+    SensitiveDataError,
     UnexpectedResponseError,
 )
 from .metrics import (
@@ -36,6 +37,7 @@ from .metrics import (
     record_rate_limit_wait,
     record_rate_limited_response,
 )
+from .privacy import PrivacyMode, redact_body, scan_body
 from .ratelimit import RateLimiter
 
 logger = logging.getLogger(__name__)
@@ -68,6 +70,7 @@ class HabiticaGateway:
         now: Callable[[], datetime],
         timeout_seconds: float = 20.0,
         max_wait_seconds: float = 10.0,
+        privacy: PrivacyMode = "block",
     ) -> None:
         self._session = session
         self._base_url = base_url.rstrip("/")
@@ -82,6 +85,7 @@ class HabiticaGateway:
         self._now = now
         self._timeout = aiohttp.ClientTimeout(total=timeout_seconds)
         self._max_wait = max_wait_seconds
+        self._privacy: PrivacyMode = privacy
         self._inflight: dict[str, asyncio.Future[Any]] = {}
 
     # ------------------------------------------------------------------ reads
@@ -259,11 +263,22 @@ class HabiticaGateway:
         *,
         invalidate: Sequence[str],
     ) -> Any:
+        body = self._guard(body)
         try:
             return await self._request(method, path, json_body=body)
         finally:
             # Even a failed write may have changed something server-side.
             self._cache.invalidate(*invalidate)
+
+    def _guard(self, body: Mapping[str, Any] | None) -> Mapping[str, Any] | None:
+        """Every write passes here: keep personal and secret data out of Habitica."""
+        if body is None or self._privacy == "off":
+            return body
+        if self._privacy == "redact":
+            return redact_body(body)
+        if findings := scan_body(body):
+            raise SensitiveDataError([(field, f.kind, f.masked) for field, f in findings])
+        return body
 
     async def _write_task(
         self, method: str, path: str, body: Mapping[str, Any] | None = None

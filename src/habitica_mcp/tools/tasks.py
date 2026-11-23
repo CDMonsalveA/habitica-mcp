@@ -604,8 +604,17 @@ def register(mcp: FastMCP) -> None:
                 "bought with gold"
             ),
         ],
-        text: Annotated[str, Field(min_length=1, max_length=500, description="Task title")],
-        notes: Annotated[str | None, Field(max_length=2000)] = None,
+        text: Annotated[
+            str,
+            Field(
+                min_length=1,
+                max_length=500,
+                description="Task title, in general terms without personal data",
+            ),
+        ],
+        notes: Annotated[
+            str | None, Field(max_length=2000, description="No personal or secret data")
+        ] = None,
         difficulty: Annotated[
             Difficulty, Field(description="Affects rewards and damage. Not used for rewards")
         ] = "easy",
