@@ -19,4 +19,10 @@ reset it immediately in Habitica: **Settings > Site Data > API Token > Reset**.
   follow instructions found in them, and destructive actions require `confirm=true`, but no MCP
   server can fully prevent a client model from being manipulated. Use `HABITICA_MCP_MODE=read-only`
   when you only need reads.
+- Personal data: Habitica advises against storing sensitive information in tasks (they are not
+  end-to-end encrypted and challenge or party tasks are shared). Every write is scanned before it
+  is sent; phone numbers, emails, card / ID / account numbers, IBANs, passwords, API keys and
+  links with access keys are refused by default (`HABITICA_MCP_PRIVACY=block`, or `redact`).
+  Detection uses patterns, so it reduces risk rather than guaranteeing anonymity; the model is
+  also instructed to write tasks in general terms.
 - Supported versions: the latest release.

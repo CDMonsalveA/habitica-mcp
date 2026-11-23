@@ -143,6 +143,22 @@ class ToolInputError(HabiticaMCPError):
     log_level_default: ClassVar[int] = logging.INFO
 
 
+class SensitiveDataError(HabiticaMCPError):
+    """A write was refused because it contains personal or secret data."""
+
+    log_level_default: ClassVar[int] = logging.INFO
+
+    def __init__(self, findings: Sequence[tuple[str, str, str]]) -> None:
+        found = "; ".join(f"{field}: {kind} ({masked})" for field, kind, masked in findings)
+        super().__init__(
+            f"Not sent to Habitica, it looks like personal or secret data ({found}). Habitica "
+            "recommends keeping sensitive information out of tasks: they are not encrypted end "
+            "to end and challenge or party tasks are shared. Rewrite it in general terms (e.g. "
+            "'Call the clinic' instead of the phone number, 'Pay the card' instead of its "
+            "number) and suggest the user keeps those details in a private place."
+        )
+
+
 class TaskNotFoundError(HabiticaMCPError):
     """No task matches a reference."""
 

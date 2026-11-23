@@ -22,6 +22,10 @@ mantenible**:
 - **Seguro por defecto**: borrar, quitar ítems de checklist o etiquetas y comprar recompensas
   devuelven una vista previa hasta que el modelo repite la llamada con `confirm=true`. El modo
   `read-only` oculta todas las herramientas de escritura.
+- **Mantiene tus datos personales fuera de Habitica**: como recomienda el propio Habitica, las
+  tareas no deben guardar información sensible. Cada escritura se revisa antes de salir de tu
+  equipo: teléfonos, correos, números de tarjeta, documento o cuenta, contraseñas y claves de API
+  se rechazan (o se ocultan), y el modelo recibe la instrucción de redactar en términos generales.
 - **Pensado para LLMs**: pocas herramientas orientadas a flujos, referencias por id *o* por texto
   ("marca meditar como hecha"), respuestas compactas sin el historial pesado de Habitica y errores
   que dicen qué hacer.
@@ -72,6 +76,7 @@ dificultad difícil, con checklist: buscar el número, preguntar por limpieza"* 
 | `HABITICA_USER_ID` | — | Tu User ID de Habitica (necesario para llamar a Habitica) |
 | `HABITICA_API_TOKEN` | — | Tu API Token de Habitica (necesario, nunca se registra en logs) |
 | `HABITICA_MCP_MODE` | `standard` | `read-only` expone solo las cinco herramientas de lectura |
+| `HABITICA_MCP_PRIVACY` | `block` | Escrituras con datos personales o secretos: `block` las rechaza, `redact` reemplaza el dato por `[redacted]`, `off` las envía tal cual |
 | `HABITICA_BASE_URL` | `https://habitica.com` | Otra instancia de Habitica (autoalojada o de pruebas) |
 | `HABITICA_X_CLIENT` | `<id del mantenedor>-habitica-mcp` | Cambia el header `x-client` (para forks) |
 | `HABITICA_MCP_RATE_LIMIT` | `25` | Máximo de peticiones por minuto (Habitica permite 30) |

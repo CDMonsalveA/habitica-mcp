@@ -18,6 +18,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .const import APP_NAME, DEFAULT_BASE_URL, HABITICA_RATE_LIMIT_PER_MINUTE, MAINTAINER_USER_ID
 from .errors import MissingCredentialsError
+from .privacy import PrivacyMode
 
 Mode = Literal["standard", "read-only"]
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR"]
@@ -58,6 +59,13 @@ class Settings(BaseSettings):
         default="standard",
         validation_alias="HABITICA_MCP_MODE",
         description="'read-only' hides every tool that changes Habitica.",
+    )
+    privacy: PrivacyMode = Field(
+        default="block",
+        validation_alias="HABITICA_MCP_PRIVACY",
+        description="What to do when a write contains personal or secret data (phone, email, "
+        "card, ID or account numbers, passwords, API keys): 'block' refuses it, 'redact' "
+        "replaces it with [redacted], 'off' sends it unchanged.",
     )
     rate_limit_per_minute: int = Field(
         default=25,
@@ -143,6 +151,11 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return value.strip().lower().replace("_", "-").replace("readonly", "read-only")
         return value
+
+    @field_validator("privacy", mode="before")
+    @classmethod
+    def _normalize_privacy(cls, value: object) -> object:
+        return value.strip().lower() if isinstance(value, str) else value
 
     @field_validator("log_level", mode="before")
     @classmethod

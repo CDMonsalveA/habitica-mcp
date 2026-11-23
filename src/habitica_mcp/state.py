@@ -53,6 +53,7 @@ class AppState:
                     now=self.now,
                     timeout_seconds=self.settings.request_timeout_seconds,
                     max_wait_seconds=self.settings.max_rate_limit_wait_seconds,
+                    privacy=self.settings.privacy,
                 )
         return self._gateway
 
