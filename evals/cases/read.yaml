@@ -57,3 +57,29 @@
     no_writes: true
     tools: {max_calls: 3}
     answer: {all_of: ["quarterly report", "email"]}
+
+- id: read-adherence-es
+  category: read
+  lang: es
+  prompt: "¿Cuál de mis diarias de Habitica estoy cumpliendo menos este mes?"
+  seed:
+    tasks:
+      - type: daily
+        text: "Meditar"
+        history:
+          - {date: "2026-09-13T14:00:00Z", value: 1, isDue: true, completed: true}
+          - {date: "2026-09-14T14:00:00Z", value: 2, isDue: true, completed: true}
+          - {date: "2026-09-15T14:00:00Z", value: 3, isDue: true, completed: true}
+          - {date: "2026-09-16T14:00:00Z", value: 4, isDue: true, completed: true}
+      - type: daily
+        text: "Acostarme temprano"
+        streak: 1
+        history:
+          - {date: "2026-09-13T14:00:00Z", value: -1, isDue: true, completed: false}
+          - {date: "2026-09-14T14:00:00Z", value: -2, isDue: true, completed: false}
+          - {date: "2026-09-15T14:00:00Z", value: -3, isDue: true, completed: false}
+          - {date: "2026-09-16T14:00:00Z", value: -2, isDue: true, completed: true}
+  expect:
+    no_writes: true
+    tools: {any_of: [habitica_get_adherence], max_calls: 3}
+    answer: {all_of: ["Acostarme"]}

@@ -2,7 +2,7 @@
 
 from fastmcp import FastMCP
 
-from . import checklist, overview, tags, tasks
+from . import adherence, checklist, overview, tags, tasks
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -10,3 +10,4 @@ def register_tools(mcp: FastMCP) -> None:
     tasks.register(mcp)
     checklist.register(mcp)
     tags.register(mcp)
+    adherence.register(mcp)

@@ -41,7 +41,7 @@ async def test_stdio_server_lists_tools_and_completes_a_todo(
         tools = await client.list_tools()
         result = await call(client, "habitica_score_task", task="stdio")
 
-    assert len(tools) == 10
+    assert len(tools) == 11
     assert result["message"] == "Completed the to-do 'Probar por stdio'."
     assert fake.tasks[task["id"]]["completed"] is True
     assert fake.api_token not in server_log.read_text(encoding="utf-8", errors="replace")

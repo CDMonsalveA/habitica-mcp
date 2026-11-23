@@ -57,6 +57,8 @@ def _iso(instant: datetime) -> str:
 
 
 def _parse_instant(value: Any) -> datetime | None:
+    if isinstance(value, int | float) and not isinstance(value, bool):
+        return datetime.fromtimestamp(value / 1000, tz=UTC)  # JavaScript timestamp
     if not isinstance(value, str) or not value:
         return None
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -519,6 +521,8 @@ class FakeHabitica:
         else:
             task["counterDown"] = task.get("counterDown", 0) + 1
             stats["hp"] = round(stats["hp"] - 2.0 * points, 2)
+        if task["type"] == "habit":
+            self._record_habit_score(task, up)
         while stats["exp"] >= _to_next_level(stats["lvl"]):
             stats["exp"] -= _to_next_level(stats["lvl"])
             stats["lvl"] += 1
@@ -527,6 +531,18 @@ class FakeHabitica:
             tmp["drop"] = self.next_drop
             self.next_drop = None
         return self._envelope({**copy.deepcopy(stats), "delta": delta, "_tmp": tmp})
+
+    def _record_habit_score(self, task: dict[str, Any], up: bool) -> None:
+        """Like Habitica: one history entry per day, with the day's +/- counts."""
+        now = self.now()
+        history: list[dict[str, Any]] = task.setdefault("history", [])
+        last = history[-1] if history else None
+        last_day = _parse_instant(last["date"]) if last else None
+        if last is None or last_day is None or self.habitica_day(last_day) != self.today():
+            last = {"scoredUp": 0, "scoredDown": 0}
+            history.append(last)
+        last["scoredUp" if up else "scoredDown"] += 1
+        last.update(date=int(now.timestamp() * 1000), value=task.get("value", 0))
 
     def _checklist_task(
         self, request: web.Request

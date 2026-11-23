@@ -23,6 +23,7 @@ READ_TOOLS = [
     "habitica_list_tasks",
     "habitica_get_task",
     "habitica_list_tags",
+    "habitica_get_adherence",
 ]
 
 
@@ -73,7 +74,7 @@ async def test_missing_credentials_are_explained_without_breaking_tool_listing()
         tools = await client.list_tools()
         message = await call_error(client, "habitica_list_tasks")
 
-    assert len(tools) == 10
+    assert len(tools) == 11
     assert "HABITICA_USER_ID and HABITICA_API_TOKEN" in message
 
 

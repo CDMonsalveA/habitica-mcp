@@ -286,6 +286,70 @@
     ],
     "title": "Habitica: delete a task"
   },
+  "habitica_get_adherence": {
+    "annotations": {
+      "destructive_hint": false,
+      "idempotent_hint": true,
+      "open_world_hint": true,
+      "read_only_hint": true
+    },
+    "description": "How consistently the user really did their dailies (completion rate over due days,\nstreak, recent pattern) and habits (+/- counts, active days) in the last N days.\nUse it for weekly reviews or to decide which tasks to simplify, drop or reinforce.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "days": {
+          "default": 30,
+          "description": "Period length in days",
+          "maximum": 90,
+          "minimum": 7,
+          "type": "integer"
+        },
+        "tag": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tag name or id"
+        },
+        "task_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "daily",
+                "habit"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Only dailies or only habits"
+        }
+      },
+      "type": "object"
+    },
+    "output_properties": [
+      "dailies",
+      "days_recorded",
+      "habits",
+      "notes",
+      "period_end",
+      "period_start"
+    ],
+    "output_schema_sha256": "0b6419d24af8245ed3868983950efdad125256d0218e9899bb7b6395a044a1eb",
+    "tags": [
+      "read"
+    ],
+    "title": "Habitica: adherence report"
+  },
   "habitica_get_overview": {
     "annotations": {
       "destructive_hint": false,

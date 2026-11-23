@@ -165,6 +165,38 @@ class TagsResult(_Output):
     tag: TagView | None = omitted()
 
 
+class DailyAdherence(_Output):
+    id: str
+    text: str
+    due_days: int = Field(description="Recorded days in the period when the daily was due")
+    completed_days: int = Field(description="Of those, days it was checked off")
+    rate: float | None = omitted("completed_days / due_days (0-1); absent when never due")
+    streak: int
+    recent: str | None = omitted("Last due days, oldest first: 'x' done, '-' missed")
+    completed_today: bool | None = omitted("Only when due today")
+
+
+class HabitAdherence(_Output):
+    id: str
+    text: str
+    up: int = Field(description="Times scored + in the period")
+    down: int = Field(description="Times scored - in the period")
+    active_days: int = Field(description="Days with at least one score")
+    last_scored: date | None = omitted()
+
+
+class AdherenceReport(_Output):
+    period_start: date
+    period_end: date
+    days_recorded: int = Field(
+        description="Days in the period Habitica recorded (it records a day only when the user "
+        "opens Habitica the next day; unrecorded days are unknown, not failures)"
+    )
+    dailies: list[DailyAdherence] = omitted_list("Weakest first")
+    habits: list[HabitAdherence] = omitted_list("Most used first")
+    notes: list[str] = omitted_list()
+
+
 # ------------------------------------------------------------------- inputs
 
 
