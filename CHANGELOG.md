@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/CDMonsalveA/habitica-mcp/compare/v0.1.0...v0.2.0) (2026-11-23)
+
+
+### Features
+
+* habitica_get_adherence reports real completion rates from task history ([#11](https://github.com/CDMonsalveA/habitica-mcp/issues/11)) ([7746bf7](https://github.com/CDMonsalveA/habitica-mcp/commit/7746bf7fc0a6a6dea2e74b2b251e0cf8d1566bfe))
+* keep personal and secret data out of Habitica ([#13](https://github.com/CDMonsalveA/habitica-mcp/issues/13)) ([a87ddfd](https://github.com/CDMonsalveA/habitica-mcp/commit/a87ddfd6cc561a442ebc88cc75efaef02137c2a4))
+
 ## 0.1.0 (2026-10-24)
 
 
